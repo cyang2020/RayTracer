@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+<title>Casper Yang  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3: PathTracer</h1>
+    <h2 align="middle">Casper Yang</h2>
+
+    <div class="padded">
+        <p>Based on project 3-1, we added more functions to the path tracer like complicated materials, environmental lights as well as a camera focusing feature based on thin lens approximation.</p>
+        <o></p>
+
+
+    <h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+        <p> For part 1, we need to implement a ray reflect and ray refract to realistically mimic mirror and glass materials. Unlike deffuse materials, where we can cast rays in a direction and generate a BSDF based on the direction of the light reflection. For this part, we need to cast a ray form the inside of the sphere, and increase the maximum ray depth to increase the number of times rays being reflected and refracted.
+        </p>
+        
+        </p>
+        <h2 align="middle">Max ray depth</h2>
+        
+        
+ <div align="middle">
+        <table class = "aligncenter" style="width=100%">
+            <tr>
+                <td align="center">
+                    <img src="./images/spheres0.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 0, s = 64, l = 4, <p>shows direct lighting effects only <p>(the ceiling light)</p></p></figcaption>
+                </td>
+                <td align="center">
+                    <img src="./images/spheres1.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 1, s = 64, l = 4, <p>shows the diffuse areas other than<p> the the plane of the light source (floor, walls)</p></p></figcaption>
+                    
+                </td>
+            </tr>
+        </table>
+        
+        <table style="width=100%">
+            <tr>
+                
+                <td>
+                    <img src="./images/spheres2.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 2, s = 64, l = 4, <p>shows the ceiling and specular areas <p>(reflective of the glass sephere and most of the mirror sephere)</p></p></figcaption>
+                </td>
+                <td>
+                    <img src="./images/spheres3.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 3, s = 64, l = 4, <p>shows the ceiling reflection in the mirror <p>sephere as well as the refraction through the glass sphere</p></p></figcaption>
+                </td>
+            </tr>
+        </table>
+        <table style="width=100%">
+            <tr>
+                <td>
+                    <img src="./images/spheres4.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 4, s = 64, l = 4, shows the reflection of the glass sephere in <p>the mirror sephere, as well as the ceiling<p> light through the glass sephere.</p></p></figcaption>
+                </td>
+                <td>
+                    <img src="./images/spheres5.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 5, s = 64, l = 4, shows the relection of the light though the <p>glass sephere onto the bottom of the <p>sephere, as well as the refraction onto the wall.</p></p></figcaption>
+                    
+                </td>
+                
+            </tr>
+            
+        </table>
+        
+        <table style="width=100%">
+            <tr>
+                
+                <td>
+                    <img src="./images/spheres100.png" align="middle" width="400px"/>
+                    <figcaption align="middle">m = 100, s = 64, l = 4, increases the bringhtness but also <p>brings out the noise. </p></figcaption>
+                </td>
+            </tr>
+            
+        </table>
+        </p>
+        </table>
+        <h2 align="middle">Part 2: Microfacet Materials</h2>
+        <p>
+        For Part 2, our goal is to implement microfacet materials, those that do not have smooth normals in a micro scale. Hence we need to implement a NDF (defines how the microfacets' normals are distributed). Accroding to the Beckmann distribution, alphaα represents how the micro surfaces reflect lights. The higher the alpha, the rougher the surfaces are resulting in reflections in multiple direction.
+        </p>
+        </p>
+        <h2 align="middle">Alpha Values</h2>
+        <div align="middle">
+            <table class = "aligncenter" style="width=100%">
+                <tr>
+                    <td align="center">
+                        <img src="./images/p2D0.005.png" align="middle" width="400px"/>
+                        <figcaption align="middle">CBdragon_microfacet_au.dae alpha = 0.005 <p>128 samples per pixel and 1 samples per light</p><p>The dragon is reflective as made of mirror thus noise
+                            <p>We can clearly see the reflective on the body of the dragon</p>
+                            <p>(the lower the alpha is the smoother the suraces are)</p></p></figcaption>
+                    </td>
+                    <td align="center">
+                        <img src="./images/p2D0.05.png" align="middle" width="400px"/>
+                        <figcaption align="middle">CBdragon_microfacet_au.dae alpha = 0.05 <p>128 samples per pixel and 1 samples per light</p><p>Still really reflective but increase of noise<p>
+                            
+                          <p>Even with higher alpha, we can still see the reflections</p>
+                            <p>(the lower the alpha is the smoother the suraces are)</p></p></p></figcaption>
+                        
+                    </td>
+                </tr>
+            </table>
+            
+            <table style="width=100%">
+                <tr>
+                    
+                    <td>
+                        <img src="./images/p2D0.25.png" align="middle" width="400px"/>
+                        <figcaption align="middle">CBdragon_microfacet_au.dae alpha = 0.25 <p>128 samples per pixel and 1 samples per light</p><p>Here the dragon is really smooth, as if it is matte <p>
+                               <p>Brighter color and reduce of noise</p>
+                            </p></p></figcaption>
+                    </td>
+                    <td>
+                        <img src="./images/p2D0.5.png" align="middle" width="400px"/>
+                        <figcaption align="middle">CBdragon_microfacet_au.dae alpha = 0.5<p>128 samples per pixel and 1 samples per light</p><p>Here the surface is really rough</p>
+                             <p>Brighter color and reduce of noise</p>
+                            </p></figcaption>
+                    </td>
+                </tr>
+            </table>
+             <h2 align="middle">Hemisphere sampling and importance sampling.</h2>
+             
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="./images/p2BCOS.png" align="middle" width="400px"/>
+                        <figcaption align="middle"><p>Cosine hemisphere sampling</p>
+                            <p>m = 4, s = 64, l = 1</p>
+                            
+                            <p>We can clearly see how much noise is made during the render
+                            <p>Since sampling a random direction resulting in spreaded out noise.</p></p></figcaption>
+                    </td>
+                    <td>
+                        <img src="./images/p2BIMP.png" align="middle" width="400px"/>
+                        <figcaption align="middle">
+                            <p>Importance sampling</p>
+                            <p>m = 4, s = 64, l = 1</p>
+                            
+                            <p>There is so much less noise. Since importance sampling
+                            <p> distributes samples based on lights' influences in different areas</p></p></figcaption>
+                        
+                    </td>
+                    
+                </tr>
+                
+            </table>
+            
+            <table style="width=100%">
+                <tr>
+                    
+                    <td>
+                        <img src="./images/p2BFE.png" align="middle" width="400px"/>
+                        <figcaption align="middle"><p>Importance sampling with IRON</p>
+                            <p>m = 4, s = 64, l = 1</p>
+                            <p>The Fe material have etas: 2.8851 2.9500 2.6500</p>
+                            <p> k: 3.0449 2.9300 2.8075</p>
+                            <p> On wavelengths of 614nm, 549 nm, and 466nm</p>
+                            
+                            
+</p></p></figcaption>
+                    </td>
+                </tr>
+                
+            </table>
+            </p>
+            </table>
+
+            
+            <h2 align="middle">Part 3: Environment Light</h2>
+            <p> For part3, we need to implement Environment Light method to emulate world lighting. If we use uniform sampling every area would have the same weight hence resulting in more noise. But if we usethe importance sampling we can increase the density of samples in important areas. We need to first address the environment map and assign pixel with differnt probability. Hence reduce the bias of calculation wasted on "unimportant" areas. This way we can improve quality.
+            </p>
+            <div align="middle">
+                <table class = "aligncenter" style="width=100%">
+                    <tr>
+                        <td align="center">
+                            <img src="./images/field.png" align="middle" width="400px"/>
+                            <figcaption align="middle">For the rest of the renderings I will be using the field.exr</p></p></figcaption>
+                        </td>
+                    </tr>
+                </table>
+                <table class = "aligncenter" style="width=100%">
+                    <tr>
+                        <td align="center">
+                            <img src="./images/p3debug.png" align="middle" width="400px"/>
+                            <figcaption align="middle">Here is the probability debug</p></p></figcaption>
+                        </td>
+                    </tr>
+                </table>
+                
+                <table style="width=100%">
+                    <tr>
+                        
+                        <td>
+                            <img src="./images/p31uniform.png" align="middle" width="400px"/>
+                            <figcaption align="middle">bunny_unlit.dae uniform s = 4, l = 64 <p>We can see there is <p>a little noise on the brighter side of the bunny</p></p></figcaption>
+                        </td>
+                        <td>
+                            <img src="./images/p31importance.png" align="middle" width="400px"/>
+                            <figcaption align="middle">bunny_unlit.dae importance s = 4, l = 64<p>We can see there is little noise but when <p>looked from far away there is not that much difference</p></p></figcaption>
+                        </td>
+                    </tr>
+                </table>
+                <table style="width=100%">
+                    <tr>
+                        <td>
+                            <img src="./images/p3cuuni.png" align="middle" width="400px"/>
+                            <figcaption align="middle">bunny_microfacet_cu_unlit.dae uniform s = 4, l = 64</p>
+                                There is some noise around the outlines as well as the highlight areas. </p>But for importance the noise on the highlight redused.
+                                </p></p></figcaption>
+                        </td>
+                        <td>
+                            <img src="./images/p3cuimp.png" align="middle" width="400px"/>
+                            <figcaption align="middle">bunny_microfacet_cu_unlit.dae importance s = 4, l = 64</p>
+                                
+                             The differnce between two sampling methods is more </p>dramatic than bunny_unlit.dae</p></p></figcaption>
+                            
+                        </td>
+                        
+                    </tr>
+                    
+                </table>
+                <p>
+              What is noticible is that there should be effiency drop for the two sampling methods, but that did not happen for me. Maybe it is because the environment map I am using, where the lights are rather "uniform".
+                </p>
+                
+                
+                <h2 align="middle">Part 4: Depth of Field</h2>
+                <p>
+                For part4, we want to mimic the behavior of a camera lens, allowing us to play with lens radius and depth of field. We can put a focal point and sample the lens. These samples have directions toward the focus. (DO NOT FORGET TO NORMALIZE!!!!!!) The thin lens model, light travels from a point through the lens then converted at a point behind the lens. It has a key feature being: focal length, the distance between the lens to its focus. On the other hand, the pinhole camera is the thin lens to a extreme degree where the aperture shrinks to zero.
+                </p>
+                </p>
+                <h2 align="middle">Depths</h2>
+        
+                <table class = "aligncenter" style="width=100%">
+                    <tr>
+                        <td align="center">
+                            <img src="./images/p4focal4.png" align="middle" width="400px"/>
+                            <figcaption align="middle"><p>CBdragon_microfacet_au.dae aperture = 0.3 focal length = 4 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                        </td>
+                        <td align="center">
+                            <img src="./images/p4focal45.png" align="middle" width="400px"/>
+                            <p>CBdragon_microfacet_au.dae aperture = 0.3 focal length = 4.5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                        </td>
+                    </tr>
+                </table>
+                <table class = "aligncenter" style="width=100%">
+                    <tr>
+                        <td align="center">
+                            <img src="./images/p4focal5.png" align="middle" width="400px"/>
+                            <figcaption align="middle"><p>CBdragon_microfacet_au.dae aperture = 0.3 focal length = 5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                        </td>
+                        <td align="center">
+                            <img src="./images/p4focal55.png" align="middle" width="400px"/>
+                            <p>CBdragon_microfacet_au.dae aperture = 0.3 focal length = 5.5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                        </td>
+                    </tr>
+                </table>
+                <p>
+                It is clear that with different focal length there is quite a difference. In the first image the focus is lied in front of the dragon, hence the whole picture is blurred. In the second and the third images, the focus is lied respectively on the head of the dragon and the tail of the dragon. While in the last image the focus is pushed to the back wall.
+                
+                </p>
+                
+                
+                 <h2 align="middle">Apertures</h2>
+                <div align="middle">
+                    <table class = "aligncenter" style="width=100%">
+                        <tr>
+                            <td align="center">
+                                <img src="./images/p4lens005.png" align="middle" width="400px"/>
+                                <p>CBdragon_microfacet_au.dae aperture = 0.05 focal length = 5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                                
+                            </td>
+                            <td align="center">
+                                <img src="./images/p4lens01.png" align="middle" width="400px"/>
+                                <figcaption align="middle"><p>CBdragon_microfacet_au.dae aperture = 0.1 focal length = 5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                            </td>
+                            
+                        </tr>
+                    </table>
+                  
+                    <table class = "aligncenter" style="width=100%">
+                        <tr>
+                            <td align="center">
+                                <img src="./images/p4lens03.png" align="middle" width="400px"/>
+                                <figcaption align="middle"><p>CBdragon_microfacet_au.dae aperture = 0.3 focal length = 5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                            </td>
+                            <td align="center">
+                                <img src="./images/p4lens06.png" align="middle" width="400px"/>
+                                <p>CBdragon_microfacet_au.dae aperture = 0.6 focal length = 5 <p>128 samples per pixel and 4 samples per light</p></p></p></figcaption>
+                            </td>
+                        </tr>
+                    </table>
+                    <p> It is clear that there is quite a difference with different aperture, all of the 4 images are focusing on the tail of the dragon. We can see that with smaller aperture we can capture more detailed imformation around the focus point. As the apture increases, the blurred area increases as we can see through the images. 
+                    </p>
+                    
+                   
+                    
+                    
+                    
+                    </p>
+                    </table>
+            </p>
+            </p>
+
+</div>
+</body>
+</html>
+
+
+
+
